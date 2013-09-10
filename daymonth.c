@@ -15,21 +15,25 @@ void parseDate(char *dateString, int stringLength);
 
 int main() 
 {
-    int *pmonth, *pyear,len;
-    int userDate[3];
+    int *pmonth, *pyear, len, userDate[3];
     int i=0;
     size_t maxLen = MAXLEN;
     char *currLine=malloc(maxLen);
+    char *bufferStart=currLine;
     char *nextField;
 
     printf("Please enter either the year,month,day or just year,day:\n");
     while((len=getline(&currLine, &maxLen, stdin)) && len != -1) {
         while (((nextField = strchr(currLine, ',')) || (nextField = strchr(currLine, '\n'))) && i < 3) {
-            *nextField = '\0';
-            userDate[i++] = atoi(currLine);
-            currLine += (nextField - currLine) + 1;
+            *(nextField++) = '\0';
+            if(userDate[i++] = atoi(currLine))
+                currLine += (nextField - currLine);
+            else {
+                printf("Invalid value entered\n");
+                break;
+            }
         }
-        currLine -= len; //reset buffer position
+        currLine = bufferStart; //reset buffer
         i=0; //reset date
     } 
     return 0;
