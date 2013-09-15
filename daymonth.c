@@ -1,60 +1,68 @@
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <ctype.h>
 
-#define MAXLEN 100
-
-/*initialize 2-dimensional array with month/days*/
-char daytab[2][13]= {
-    { 31,28,31,30,31,30,31,31,30,31,30,31 },
-    { 31,29,31,30,31,30,31,31,30,31,30,31 }
+int daymonth[][13] = {
+	{ 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
+	{ 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 };
 
-/*function declarations*/
-int dayOfYear(int year, int month, int day);
-void monthDay(int year, int day, int *pmonth, int *pday);
-void parseDate(char *dateString, size_t *stringLength);
+int yearday (int year, int month, int day);
+void monthyear (int year, int day, int *pMonth, int *pDay);
+int getDate (int *year, int *month, int *day);
 
-int main() 
+int main()
 {
-    int *pmonth, *pyear,*pday; 
-    size_t maxLen = MAXLEN;
-    char *currLine=malloc(maxLen);
+	int year,month,day,pMonth,pDay,chooseFunc;
 
-    printf("Please enter either the year,month,day or just year,day:\n");
-    parseDate(currLine, &maxLen);
-    return 0;
+	printf("Please enter Y/m/d or Y/d:\n");
+	chooseFunc=getDate(&year,&month,&day);
+	if (chooseFunc <= 1 ) {
+		printf("Invalid date entered.\n");
+		return 1;
+	}
+	if (chooseFunc == 3)
+		printf("Entered in Y-m-d format: %d\n", yearday(year,month,day)); 
+	if (chooseFunc == 2) {
+		monthyear(year,month,&pMonth,&pDay);
+		printf("Entered in Y-d format: %d %d\n",pMonth,pDay);
+	}
+	return 0;
 }
 
-void parseDate(char *dateString, size_t *stringLength)
+int getDate(int *year, int *month, int *day)
 {
-    int i=0;
-	int len,userDate[3];
-    char *bufferStart=dateString;
-    char *nextField;
-	
-	while((len=getline(&dateString, &stringLength, stdin)) && len != -1) {
-		while (((nextField = strchr(dateString, ',')) || (nextField = strchr(dateString, '\n'))) && i < 3) 
-		{
-			*(nextField++) = '\0';
-			if(userDate[i++] = atoi(dateString))
-				dateString += (nextField - dateString);
-			else 
-			{
-				printf("Invalid value entered\n");
-				break;
-			}
-		}
-		/*if (i > 1 && i < 4) {
-			if (i == 2)
-				monthDay(userDate[0],userDate[1],pmonth,pday);
-			if (i == 3)
-				dayOfYear(userDate[0],userDate[1],userDate[2]);
-		}
-		else
-			printf("Invalid number of arguments\n");*/
+	int c,i,currentNum;
+	int *datePtrs[3] = { year, month, day };
+	i=0;
 
-		dateString = bufferStart; //reset buffer
-		i=0; //reset date
+	while ((c=getc(stdin)) != '\n' && i < 3)	
+	{
+		for (currentNum=0; isdigit(c); c=getc(stdin))
+			currentNum = 10 * currentNum + (c - '0');
+		if (currentNum !=0)
+			*datePtrs[i++] = currentNum;
+		if (c == '\n')
+			ungetc(c,stdin);
 	}
+	return i;
+}
+
+int yearday (int year, int month, int day)
+{
+	int i, leap;
+	leap = year%4 == 0 && year%100 != 0 || year%400 == 0;
+	for (i = 1; i < month; i++)
+		day += daymonth[leap][i];
+	return day;
+}
+
+void monthyear (int year, int day, int *pMonth, int *pDay)
+{
+	int i, leap;
+
+	leap = year%4 == 0 && year%100 != 0 || year%400 == 0;
+	for (i = 1; day > daymonth[leap][i]; i++)
+		day -= daymonth[leap][i];
+	*pMonth = i;
+	*pDay = day;
 }
